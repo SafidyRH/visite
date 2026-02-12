@@ -20,7 +20,7 @@ export const LoginForm: React.FC = () => {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="w-full max-w-[28rem] mx-auto">
       <CardHeader>
         <CardTitle>Connexion</CardTitle>
         <CardDescription>Entrez vos identifiants pour accéder à votre compte</CardDescription>
