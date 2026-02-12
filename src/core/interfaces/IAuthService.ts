@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { type User } from '@supabase/supabase-js';
+import { type AuthChangeEvent, type Session, type User } from '@supabase/supabase-js';
 
 export interface AuthCredentials {
   email: string;
@@ -8,7 +7,7 @@ export interface AuthCredentials {
 
 export interface AuthResponse {
   user: User | null;
-  session: any | null; // ou le type de session Supabase
+  session: Session | null;
   error: Error | null;
 }
 
@@ -17,6 +16,6 @@ export interface IAuthService {
   signUp(credentials: AuthCredentials): Promise<AuthResponse>;
   signOut(): Promise<{ error: Error | null }>;
   getCurrentUser(): Promise<User | null>;
-  getSession(): Promise<any>;
-  onAuthStateChange(callback: (event: string, session: any) => void): () => void;
+  getSession(): Promise<Session | null>;
+  onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void): () => void;
 }

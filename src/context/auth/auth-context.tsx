@@ -14,28 +14,31 @@ export interface AuthContextType {
 
 interface AuthProviderProps {
   children: ReactNode;
-  authService?: IAuthService; // injection possible
+  authService?: IAuthService;
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
-  authService: injectedAuthService = authService, // par défaut l'implémentation Supabase
+  authService: injectedAuthService = authService,
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Récupérer l'utilisateur au chargement
     const loadUser = async () => {
-      const currentUser = await injectedAuthService.getCurrentUser();
-      setUser(currentUser);
-      setIsLoading(false);
+      try {
+        const session = await injectedAuthService.getSession();
+        setUser(session?.user ?? null);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    loadUser();
 
-    // Écouter les changements d'authentification
-    const unsubscribe = injectedAuthService.onAuthStateChange((event, session) => {
+    void loadUser();
+
+    const unsubscribe = injectedAuthService.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      setIsLoading(false);
     });
 
     return () => {
@@ -45,26 +48,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
 
   const signIn = async (email: string, password: string) => {
     setIsLoading(true);
-    const { user, error } = await injectedAuthService.signIn({ email, password });
-    if (error) throw error;
-    setUser(user);
-    setIsLoading(false);
+    try {
+      const { user, error } = await injectedAuthService.signIn({ email, password });
+      if (error) throw error;
+      setUser(user);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const signUp = async (email: string, password: string) => {
     setIsLoading(true);
-    const { user, error } = await injectedAuthService.signUp({ email, password });
-    if (error) throw error;
-    setUser(user);
-    setIsLoading(false);
+    try {
+      const { user, error } = await injectedAuthService.signUp({ email, password });
+      if (error) throw error;
+      setUser(user);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const signOut = async () => {
     setIsLoading(true);
-    const { error } = await injectedAuthService.signOut();
-    if (error) throw error;
-    setUser(null);
-    setIsLoading(false);
+    try {
+      const { error } = await injectedAuthService.signOut();
+      if (error) throw error;
+      setUser(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

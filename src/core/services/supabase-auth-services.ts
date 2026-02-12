@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { type User } from '@supabase/supabase-js';
+import { type AuthChangeEvent, type Session, type User } from '@supabase/supabase-js';
 import type { AuthCredentials, AuthResponse, IAuthService } from '../interfaces/IAuthService';
 import { supabase } from './supabase-client';
 
@@ -9,6 +8,7 @@ export class SupabaseAuthService implements IAuthService {
       email,
       password,
     });
+
     return {
       user: data?.user ?? null,
       session: data?.session ?? null,
@@ -21,6 +21,7 @@ export class SupabaseAuthService implements IAuthService {
       email,
       password,
     });
+
     return {
       user: data?.user ?? null,
       session: data?.session ?? null,
@@ -34,22 +35,36 @@ export class SupabaseAuthService implements IAuthService {
   }
 
   async getCurrentUser(): Promise<User | null> {
-    const { data } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
+
+    if (error) {
+      return null;
+    }
+
     return data?.user ?? null;
   }
 
-  async getSession(): Promise<any> {
-    const { data } = await supabase.auth.getSession();
+  async getSession(): Promise<Session | null> {
+    const { data, error } = await supabase.auth.getSession();
+
+    if (error) {
+      return null;
+    }
+
     return data?.session ?? null;
   }
 
-  onAuthStateChange(callback: (event: string, session: any) => void): () => void {
+  onAuthStateChange(
+    callback: (event: AuthChangeEvent, session: Session | null) => void
+  ): () => void {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       callback(event, session);
     });
-    return data?.subscription.unsubscribe ?? (() => {});
+
+    return () => {
+      data.subscription.unsubscribe();
+    };
   }
 }
 
-// Instance unique du service (injection possible via un conteneur DI)
 export const authService = new SupabaseAuthService();
